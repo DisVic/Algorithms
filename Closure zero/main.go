@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -14,16 +15,16 @@ func main() {
 
 func findDistance() {
 	var n int
-	var err error
-	_, err = fmt.Scan(&n)
-	if err != nil {
-		fmt.Println("ошибка")
-		return
-	}
-	if n <= 0 {
-		fmt.Println("Пустая строка данных")
-		return
-	}
+	//var err error
+	_, _ = fmt.Scan(&n)
+	// if err != nil {
+	// 	fmt.Println("ошибка")
+	// 	return
+	// }
+	// if n <= 0 {
+	// 	fmt.Println("Пустая строка данных")
+	// 	return
+	// }
 	houses := make([]int, n)
 	for i := 0; i < n; i++ {
 		var number int
@@ -31,26 +32,49 @@ func findDistance() {
 		houses[i] = number
 	}
 	t := time.Now()
+
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
 	counter := 0
+
+	// Forward pass
+	wg.Add(n)
 	for i := 0; i < len(houses); i++ {
-		time.Sleep(time.Second)
-		if houses[i] == 0 {
-			counter = 0
-		} else {
-			counter++
-			houses[i] = counter
-		}
+		go func(i int) {
+			defer wg.Done()
+			mutex.Lock()
+			if houses[i] == 0 {
+				counter = 0
+			} else {
+				counter++
+				houses[i] = counter
+			}
+			mutex.Unlock()
+		}(i)
 	}
-	for i := len(houses) - 1; i > 0; i-- {
-		if houses[i] == 0 {
-			counter = 0
-		} else if counter < houses[i] {
-			counter++
-			houses[i] = counter
-		} else {
-			continue
-		}
+
+	wg.Wait() // Wait for all forward pass goroutines to complete
+
+	// Reset counter
+	counter = 0
+
+	// Backward pass
+	wg.Add(n)
+	for i := len(houses) - 1; i >= 0; i-- {
+		go func(i int) {
+			defer wg.Done()
+			mutex.Lock()
+			if houses[i] == 0 {
+				counter = 0
+			} else if counter < houses[i] {
+				counter++
+				houses[i] = counter
+			}
+			mutex.Unlock()
+		}(i)
 	}
+
+	wg.Wait()
 	fmt.Print(houses)
 	fmt.Println(time.Since(t))
 	printMemStats()
