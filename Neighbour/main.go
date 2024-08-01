@@ -17,14 +17,14 @@ func main() {
 			matrix[i][j] = counter
 		}
 	}
+	var corX, corY int
+	_, _ = fmt.Scan(&corX, &corY)
 	t := time.Now()
-	findNeighbour(matrix)
+	findNeighbour(matrix, corX, corY)
 	fmt.Print(time.Since(t))
 }
 
-func findNeighbour(numbers [][]int) {
-	var corX, corY int
-	_, _ = fmt.Scan(&corX, &corY)
+func findNeighbour(numbers [][]int, corX, corY int) {
 	switch {
 	case corX == 0 && corY == 0:
 		fmt.Printf("%d %d", numbers[corX+1][corY], numbers[corX][corY+1])
